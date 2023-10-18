@@ -1,18 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TestingNetcodeUI : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] private Button startHostButton;
+    [SerializeField] private Button startClientButton;
+    private void Awake()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
+        startHostButton.onClick.AddListener(() => { 
+            NetworkManager.Singleton.StartHost();
+            Hide();
+        });
+        startClientButton.onClick.AddListener(() => { 
+            NetworkManager.Singleton.StartClient();
+            Hide();
+        });
+    } 
+    private void Hide()
     {
-        
+        gameObject.SetActive(false);
     }
 }

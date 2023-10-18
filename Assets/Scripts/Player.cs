@@ -57,6 +57,11 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     private void Update()
     {
+        if (!IsOwner)
+        {
+            return;
+        }
+        //HandleMovementServerAuth(); //for server auth
         HandleMovement();
         HandleInteraction();
     }
@@ -103,6 +108,68 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
             SetSelectedCounter(null);
         }
     }
+
+    #region "Server Auth Example"
+    private void HandleMovementServerAuth()
+    {
+        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
+        HandleMovementRpc(inputVector);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void HandleMovementRpc(Vector2 inputVector)
+    {
+         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        float moveDistance = Time.deltaTime * moveSpeed;
+        //function that check if player hit something, return true if hit (check collision)
+        float playerRadius = 0.7f;
+        float playerHeight = 2f;
+        // raycast thin shape, player can go through as long as the center is not collision
+        //bool canMove = !Physics.Raycast(transform.position, moveDir, playerSize);
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
+
+        if (!canMove)
+        {
+            //cannot move torwards moveDir
+            //attempt only x movement
+            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
+            canMove = moveDir.x != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
+
+            if (canMove)
+            {
+                //can move only on the X
+                moveDir = moveDirX;
+            }
+            else
+            {
+                //cannot move only on the X
+                // attempt only z movement
+                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
+                canMove = moveDir.z != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
+                if (canMove)
+                {
+                    //can move only on the z
+                    moveDir = moveDirZ;
+                }
+                else
+                {
+                    //cannot move in any direction
+                }
+            }
+        }
+
+        if (canMove)
+        {
+            transform.position += moveDir * moveDistance;
+        }
+
+        isWalking = moveDir != Vector3.zero;
+        // ways to change rotation (dont use .rotate)
+        //transform.eulerAngles
+        //transform.LookAt
+        float rotateSpeed = 10f;
+        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+    }
+    #endregion
     private void HandleMovement()
     {
         //get input 
