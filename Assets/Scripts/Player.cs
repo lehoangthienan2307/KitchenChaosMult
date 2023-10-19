@@ -113,10 +113,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     private void HandleMovementServerAuth()
     {
         Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
-        HandleMovementRpc(inputVector);
+        HandleMovementServerRpc(inputVector);
     }
     [ServerRpc(RequireOwnership = false)]
-    private void HandleMovementRpc(Vector2 inputVector)
+    private void HandleMovementServerRpc(Vector2 inputVector)
     {
          Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
         float moveDistance = Time.deltaTime * moveSpeed;
@@ -169,7 +169,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         float rotateSpeed = 10f;
         transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
     }
-    #endregion
+    #endregion 
     private void HandleMovement()
     {
         //get input 
