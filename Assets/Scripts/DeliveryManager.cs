@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-public class DeliveryManager : MonoBehaviour
+using Unity.Netcode;
+public class DeliveryManager : NetworkBehaviour
 {
     public event EventHandler OnRecipeSpawned;
     public event EventHandler OnRecipeCompleted;
@@ -23,6 +24,11 @@ public class DeliveryManager : MonoBehaviour
     }
     private void Update()
     {
+        if (!IsServer)
+        {
+            return;
+        }
+
         spawnRecipeTimer -= Time.deltaTime;
         if (spawnRecipeTimer <= 0f)
         {
@@ -37,6 +43,11 @@ public class DeliveryManager : MonoBehaviour
                 OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
             }
         }
+    }
+    [ClientRpc]
+    private void SpawnNewWaitingRecipeClientRpc(RecipeSO recipeSO)
+    {
+
     }
     public void DeliverRecipe(PlateKitchenObject plateKitchenObject)
     {
